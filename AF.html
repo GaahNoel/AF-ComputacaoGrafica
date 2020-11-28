@@ -49,21 +49,20 @@
         var engine = null;
         var scene = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
-
+        var selecionado = false;
         var createScene = function () {
 
             // Create the scene space
             var scene = new BABYLON.Scene(engine);
 
             // Add a camera to the scene and attach it to the canvas
-            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
-            camera.setPosition(new BABYLON.Vector3(30, 0, 0));
+            /*var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(50, 0, 0));
             camera.attachControl(canvas, true);
 
             // Add lights to the scene
             var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
-
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);*/
 
             var map = {};
             scene.actionManager = new BABYLON.ActionManager(scene);
@@ -102,36 +101,97 @@
 
                 });
 
-            criarCarro();
+                const menuText = menuEscolha(scene);
+                
+                escolhaConfirmarCarro(menuText, scene);
 
             return scene;
         }
 
+        function setupInitialScene(scene){
+            scene.cameras.forEach(function(camera){
+                camera.dispose(false,true)
+            })
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(40, 15, 0));
+            camera.lockedTarget = new BABYLON.Vector3(0,5,20);
+
+            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+            
+
+            var background =  BABYLON.MeshBuilder.CreatePlane("plane", {height:125, width: 125, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+            background.position = new BABYLON.Vector3(-2,10,15);
+            background.rotation.y = 4.75;
+            var materialBg = new BABYLON.StandardMaterial("material", scene);
+            materialBg.diffuseTexture = new BABYLON.Texture("./Sky.jpg");
+            materialBg.diffuseTexture.uScale = 0.8;
+            //materialBg.diffuseTexture.vScale = 8;
+            materialBg.specularTexture = new BABYLON.Texture("./Sky.jpg");
+            materialBg.emissiveTexture = new BABYLON.Texture("./Sky.jpg");
+            background.material = materialBg;
+            
+            
+        }
+
+        function menuEscolha(scene){
+            
+            setupInitialScene(scene);
+
+            var carro1 = criarCarro(1);
+            var carro2 = criarCarro(2);
+            var carro3 = criarCarro(3);
+            var carro4 = criarCarro(4);
+            var carro5 = criarCarro(5);
+            carro2.position.z = 10;
+            carro3.position.z = 20;
+            carro4.position.z = 30;
+            carro5.position.z = 40;
+
+            const menu = criarHubMenuEscolha();
+            return menu;
+        }
 
 
-        function criarCarro() {
+        function criarCarro(idCarro) {
 
             var meshCarro = new BABYLON.Mesh("carro", scene);
 
-            var materialPreto = materialCor("preto");
-            var materialVerde = materialCor("verde");
+            var hitbox = BABYLON.MeshBuilder.CreateBox(String(idCarro), { height: 2.8, width: 3.7, size: 6.6 }, scene);
+            hitbox.visibility = 0.1;
+            hitbox.position.y = 0.5;
 
-            let deslY = -0.5;
+            var materialPreto = materialCor("preto");
+            var materialCarroPrincipal = materialCarro(idCarro);
+            var materialCarroParachoque = materialCarro("parachoque");
+
+            let deslY = -0.4;
             let deslX = 1.40;
             let deslZ = 1.75;
 
-            var caixaCorpoCarro = BABYLON.MeshBuilder.CreateBox("caixa", { height: 1, width: 3, size: 6.5 }, scene);
+            var caixaCorpoInferiorCarro = BABYLON.MeshBuilder.CreateBox("caixaI", { height: 0.4, width: 3, size: 6.5 }, scene);
+            var caixaCorpoMediaCarro = BABYLON.MeshBuilder.CreateBox("caixaM", { height: 0.6, width: 2.95, size: 6.4 }, scene);
+            var caixaCorpoSuperiorCarro = BABYLON.MeshBuilder.CreateBox("caixaS", { height: 1.4, width: 2.9, size: 4.5 }, scene);
             var esferaRodaDianteiraDireita = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
             var esferaRodaDianteiraEsquerda = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
             var esferaRodaTraseiraDireita = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
             var esferaRodaTraseiraEsquerda = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
 
-            //#region Aplicando cor 
-            caixaCorpoCarro.material = materialVerde;
+            //#region Aplicando material 
+            caixaCorpoInferiorCarro.material = materialCarroParachoque;
+            caixaCorpoMediaCarro.material = materialCarroPrincipal;
+            caixaCorpoSuperiorCarro.material = materialCarroPrincipal;
             esferaRodaDianteiraDireita.material = materialPreto;
             esferaRodaDianteiraEsquerda.material = materialPreto;
             esferaRodaTraseiraDireita.material = materialPreto;
             esferaRodaTraseiraEsquerda.material = materialPreto;
+            //#endregion
+
+            //#region Altera posições das partes do carro
+            caixaCorpoMediaCarro.position.y = 0.4;
+            caixaCorpoSuperiorCarro.position.y = 1;
             //#endregion
 
             //#region Definindo posições das rodas
@@ -152,7 +212,10 @@
             esferaRodaTraseiraEsquerda.position.z = deslZ * -1;
             //#endregion
 
-            meshCarro.addChild(caixaCorpoCarro);
+            meshCarro.addChild(hitbox);
+            meshCarro.addChild(caixaCorpoInferiorCarro);
+            meshCarro.addChild(caixaCorpoMediaCarro );
+            meshCarro.addChild(caixaCorpoSuperiorCarro);
             meshCarro.addChild(esferaRodaDianteiraDireita);
             meshCarro.addChild(esferaRodaDianteiraEsquerda);
             meshCarro.addChild(esferaRodaTraseiraDireita);
@@ -185,9 +248,9 @@
             meshEstrada.addChild(estrada);
 
             return meshEstrada;
-        }
+            }
 
-        function materialCor(corParam) {
+            function materialCor( corParam ) {
 
             var cor = new BABYLON.StandardMaterial("cor", scene);
 
@@ -205,8 +268,239 @@
                 cor.diffuseColor = new BABYLON.Color3(1, 1, 1);
             }
 
-
             return cor;
+        }
+
+            function materialCarro(materialParam){
+
+            var material = new BABYLON.StandardMaterial("material", scene);
+
+            if(materialParam == "1"){
+                material.diffuseTexture = new BABYLON.Texture("./Vermelho.jpg");
+                material.specularTexture = new BABYLON.Texture("./Vermelho.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./Vermelho.jpg");
+            }else if(materialParam == "2"){
+                material.diffuseTexture = new BABYLON.Texture("./Golden.jpg");
+                material.specularTexture = new BABYLON.Texture("./Golden.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./Golden.jpg");
+            }else if(materialParam == "3"){
+                material.diffuseTexture = new BABYLON.Texture("./DM.jpg");
+                material.specularTexture = new BABYLON.Texture("./DM.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./DM.jpg");
+            }else if(materialParam == "4"){
+                material.diffuseTexture = new BABYLON.Texture("./Space.jpg");
+                material.specularTexture = new BABYLON.Texture("./Space.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./Space.jpg");
+            }else if(materialParam == "5"){
+                material.diffuseTexture = new BABYLON.Texture("./Ocean.jpg");
+                material.specularTexture = new BABYLON.Texture("./Ocean.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./Ocean.jpg");
+            }else{
+                material.diffuseTexture = new BABYLON.Texture("./8b4569310eb53353c9190ae6efa7eb4c.jpg");
+                material.specularTexture = new BABYLON.Texture("./8b4569310eb53353c9190ae6efa7eb4c.jpg");
+                material.emissiveTexture = new BABYLON.Texture("./8b4569310eb53353c9190ae6efa7eb4c.jpg");
+            }
+
+            return material;
+            }
+
+            function criarHubMenuEscolha() {
+            var advancedTexture;
+
+            var buildUI = function () {
+                if (advancedTexture) {
+                    advancedTexture.dispose();
+                }
+                advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+                var bottomPanel = new BABYLON.GUI.StackPanel();
+                bottomPanel.height = "130px";
+                bottomPanel.paddingBottom = "20px";
+                bottomPanel.isVertical = true;
+                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                bottomPanel.fontSize = 20;
+                advancedTexture.addControl(bottomPanel);
+
+                var topPanel = new BABYLON.GUI.StackPanel();
+                topPanel.height = "550px";
+                topPanel.paddingBottom = "20px";
+                topPanel.isVertical = true;
+                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                topPanel.fontSize = 16;
+                advancedTexture.addControl(topPanel);
+
+                var addHeader = function (text, panel, alinhamento) {
+                    var header = new BABYLON.GUI.TextBlock();
+                    header.text = text;
+                    header.height = "30px";
+                    header.color = "white";
+                    header.outlineWidth = "4px";
+                    header.outlineColor = "black";
+                    header.textHorizontalAlignment = alinhamento;
+
+                    panel.addControl(header);
+                }
+
+                var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+                addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
+                addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
+                addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+
+                addHeader("SELECIONE O CARRO QUE DESEJA JOGAR", bottomPanel, alinhamentoCentro);
+                addHeader("PARA SELECIONAR USE O CLIQUE", bottomPanel, alinhamentoCentro);
+                addHeader("(OS CARROS REPRESENTAM O NÍVEL DE DIFICULDADE, SENDO DO MAIS FÁCIL AO DIFÍCIL, DA ESQUERDA A DIREITA)", bottomPanel, alinhamentoCentro);
+            }
+
+            buildUI();
+            return advancedTexture;
+        }
+
+        function criarHubConfirmarCarro(scene) {
+            var advancedTexture;
+
+            var buildUI = function () {
+                if (advancedTexture) {
+                    advancedTexture.dispose();
+                }
+                advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+                var bottomPanel = new BABYLON.GUI.StackPanel();
+                bottomPanel.height = "200px";
+                bottomPanel.paddingBottom = "20px";
+                bottomPanel.isVertical = true;
+                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                bottomPanel.fontSize = 20;
+                advancedTexture.addControl(bottomPanel);
+
+                var topPanel = new BABYLON.GUI.StackPanel();
+                topPanel.height = "600px";
+                topPanel.paddingBottom = "20px";
+                topPanel.isVertical = true;
+                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                topPanel.fontSize = 16;
+                advancedTexture.addControl(topPanel);
+
+                var addHeader = function (text, panel, alinhamento) {
+                    var header = new BABYLON.GUI.TextBlock();
+                    header.text = text;
+                    header.height = "30px";
+                    header.color = "white";
+                    header.outlineWidth = "4px";
+                    header.outlineColor = "black";
+                    header.textHorizontalAlignment = alinhamento;
+
+                    panel.addControl(header);
+                }
+
+                var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+                addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
+                addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
+                addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+
+                addHeader("DESEJA ESCOLHER ESSE CARRO?", bottomPanel, alinhamentoCentro);
+
+                //var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
+                var botaoSim = BABYLON.GUI.Button.CreateSimpleButton("sim", "Sim");
+                botaoSim.width = 0.1
+                botaoSim.top = 200;
+                botaoSim.left = 80;
+                botaoSim.height = "40px"
+                botaoSim.color = "white"
+                botaoSim.background = "grey"
+                advancedTexture.addControl(botaoSim);
+
+                var botaoNao = BABYLON.GUI.Button.CreateSimpleButton("nao", "Não");
+                botaoNao.width = 0.1
+                botaoNao.top = 200;
+                botaoNao.left = -80;
+                botaoNao.height = "40px"
+                botaoNao.color = "white"
+                botaoNao.background = "grey"
+                advancedTexture.addControl(botaoNao);
+
+                botaoNao.onPointerClickObservable.add(function () {
+                    var menuText = menuEscolha(scene);
+                    advancedTexture.dispose();
+                    selecionado = false;
+                    escolhaConfirmarCarro(menuText, scene);
+                });
+
+                botaoSim.onPointerClickObservable.add(function () {
+                    
+                });
+            }
+
+            buildUI();
+            return advancedTexture;
+        }
+
+        function cleanMesh(scene){
+            var meshes = scene.getMeshesByID("carro");
+            meshes.forEach(function(mesh){
+                mesh.dispose();
+            })
+        }
+
+        function setupCarSelectScene(scene, objectFunction, carID){
+            cleanMesh(scene);
+            selecionado = true;
+            scene.cameras.forEach(function(camera){
+                camera.dispose(false,true)
+            })
+
+            const object = objectFunction(carID);
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(20, 5, 0));
+            camera.attachControl(canvas, true);
+
+            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+            attachCamera(camera,object)
+            return object;
+        }
+
+        function attachCamera(camera,object){
+            camera.setTarget(object);
+        }
+
+        function escolhaConfirmarCarro(menuText, scene){
+            scene.onPointerDown = function(event, pickResult) {
+                if(pickResult.hit && !selecionado) {
+                    if(pickResult.pickedMesh.id == 1){
+                        const car = setupCarSelectScene(scene,criarCarro, 1);      
+                        menuText.dispose();
+                        const menu = criarHubConfirmarCarro(scene);
+                    }
+                    else if(pickResult.pickedMesh.id == 2){
+                        const car = setupCarSelectScene(scene,criarCarro, 2);
+                        menuText.dispose();
+                        const menu = criarHubConfirmarCarro(scene);
+                    }
+                    else if(pickResult.pickedMesh.id == 3){
+                        const car = setupCarSelectScene(scene,criarCarro, 3);
+                        menuText.dispose();
+                        const menu = criarHubConfirmarCarro(scene);
+                    }
+                    else if(pickResult.pickedMesh.id == 4){
+                        const car = setupCarSelectScene(scene,criarCarro, 4);
+                        menuText.dispose();
+                        const menu = criarHubConfirmarCarro(scene);
+                    }
+                    else if(pickResult.pickedMesh.id == 5){
+                        const car = setupCarSelectScene(scene,criarCarro, 5);
+                        menuText.dispose();
+                        const menu = criarHubConfirmarCarro(scene);
+                    }
+                }
+            }
         }
 
         function loop() {
@@ -222,10 +516,7 @@
                 mesh.rotation.z += (0.01 * inc);
                 mesh.rotation.y += (0.01 * inc);
                 mesh.rotation.x += (0.01 * inc);
-           });
-
-
-
+            });
         };
 
         engine = createDefaultEngine();
@@ -244,7 +535,7 @@
             engine.resize();
         });
 
-    </script>
-</body>
+        </script>
+    </body>
 
 </html>
