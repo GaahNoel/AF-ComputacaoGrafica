@@ -57,18 +57,7 @@
         var advancedTexture;
         var selectedCar = 1;
 
-        var theta = 0;
-        var deltaTheta = 0;
-        var D = 0; 
-        var R = 50; 
-        var NR; 
-        var A = 4; 
-        var L = 4; 
-        var r = 1.5; 
-        var psi, psiRI, psiRO, psFI, psiFO;  
-        var phi; 
-        
-        var F; 
+       
 
         var createScene = function () {
 
@@ -221,38 +210,39 @@
 
             var pivotFI = new BABYLON.Mesh("pivotFI", scene);
             pivotFI.parent = caixaCorpoMediaCarro;
-            pivotFI.position = new BABYLON.Vector3(-6.5, 0, 0);
+            pivotFI.position = new BABYLON.Vector3(-1.1, -0.5, 2);
             
             var pivotFO = new BABYLON.Mesh("pivotFO", scene);
             pivotFO.parent = caixaCorpoMediaCarro;
-            pivotFO.position = new BABYLON.Vector3(-6.5, 0, -2);
+            pivotFO.position = new BABYLON.Vector3(1.1, -0.5, 2);
 
             var wheelFO = wheelFI.createInstance("FO");
-
             wheelFO.parent = pivotFO;
-            wheelFO.position = new BABYLON.Vector3(0, 0, 1.8);
             
             var wheelRI = wheelFI.createInstance("RI");
             wheelRI.parent = caixaCorpoMediaCarro;
-            wheelRI.position = new BABYLON.Vector3(0, 0, -2.8);
+            wheelRI.position = new BABYLON.Vector3(-1.1, -0.5, -2);
             
             var wheelRO = wheelFI.createInstance("RO");
             wheelRO.parent = caixaCorpoMediaCarro;
-            wheelRO.position = new BABYLON.Vector3(0, 0, 2.8);
+            wheelRO.position = new BABYLON.Vector3(1.1, -0.5, -2);
             
             wheelFI.parent = pivotFI;
-            wheelFI.position = new BABYLON.Vector3(0, 0, -1.8);
 
 
             pivot = new BABYLON.Mesh("pivot", scene); //current centre of rotation
-            pivot.position.x = 50;
+            pivot.position.z = 50;
             caixaCorpoMediaCarro.parent = pivot;
-            pivot.addChild(wheelFI);
-            caixaCorpoMediaCarro.position = new BABYLON.Vector3(-50,0,0);
+            //var wheelFI = BABYLON.MeshBuilder.CreateCylinder("wheelFI", {diameter: 3, height: 1, tessellation: 24}, scene);
+            //pivot.addChild(wheelFI);
+            caixaCorpoMediaCarro.position = new BABYLON.Vector3(0,0,-50);
 
             //var teste = BABYLON.MeshBuilder.CreateBox("caixaS", { height: 1.4, width: 2.9, size: 4.5 }, scene);
             //teste.position = pivot.position;
             
+            //caixaCorpoInferiorCarro.parent = caixaCorpoMediaCarro;
+            //caixaCorpoSuperiorCarro.parent = caixaCorpoMediaCarro;
+
             //#region Aplicando material 
             caixaCorpoInferiorCarro.material = materialCarroParachoque;
             caixaCorpoMediaCarro.material = materialCarroPrincipal;
@@ -730,6 +720,20 @@
         }
 
         function createGameScene(scene, idCarro) {
+
+            var theta = 0;
+            var deltaTheta = 0;
+            var D = 0; 
+            var R = 50; 
+            var NR; 
+            var A = 4; 
+            var L = 4; 
+            var r = 1.5; 
+            var psi, psiRI, psiRO, psFI, psiFO;  
+            var phi; 
+            
+            var F; 
+
             cleanMesh(scene);
             scene.cameras.forEach(function(camera){
                 camera.dispose(false,true)
@@ -748,47 +752,33 @@
             /*car._children.forEach(function(carProp){
                 if(carProp.id == "pivotFO")
             })*/
+    
+            const carBody = scene.getMeshByID("caixaM");
+            //carBody = car;
 
-            var pivotFO = car._children.find(function(carProp){
-                if(carProp.id == "pivotFO")
-                    return true;
-            })
-            var pivotFI = car._children.find(function(carProp){
-                if(carProp.id == "pivotFI")
-                    return true;
-            })
-            var wheelRI = car._children.find(function(carProp){
-                if(carProp.id == "wheelRI")
-                    return true;
-            })
-            var wheelRO = car._children.find(function(carProp){
-                if(carProp.id == "wheelRO")
-                    return true;
-            })
-            var wheelFI = car._children.find(function(carProp){
-                if(carProp.id == "wheelFI")
-                    return true;
-            })
-            var wheelFO = car._children.find(function(carProp){
-                if(carProp.id == "wheelFO")
-                    return true;
-            })
+            const pivotFI = scene.getMeshByID("pivotFI");
+            const pivotFO = scene.getMeshByID("pivotFO");
 
-            var carBody = car._children.find(function(carProp){
-                if(carProp.id == "caixaM")
-                    return true;
-            })
+            const wheelRO = scene.getMeshByID("RO");
+            const wheelRI = scene.getMeshByID("RI");
+            const wheelFO = scene.getMeshByID("FO");
+            const wheelFI = scene.getMeshByID("wheelFI");
 
+            console.log(wheelFO);
+            console.log(wheelFI);
+            console.log(wheelRO);
+            console.log(wheelRI);
 
             console.log(pivotFO);
+            console.log(pivotFI);
 
             var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
             camera.setPosition(new BABYLON.Vector3(0, 7, 20));
-            //camera.attachControl(canvas, true);
+            camera.attachControl(canvas, true);
 
             var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
             var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
-
+           
             var map = {};
             scene.actionManager = new BABYLON.ActionManager(scene);
 
@@ -830,8 +820,8 @@
                         theta = 0;
                         NR = 0;
                     }
-                    pivot.translate(BABYLON.Axis.Z, NR - R, BABYLON.Space.LOCAL);
-                    carBody.translate(BABYLON.Axis.Z, R - NR, BABYLON.Space.LOCAL);
+                    pivot.translate(BABYLON.Axis.X, NR - R, BABYLON.Space.LOCAL);
+                    carBody.translate(BABYLON.Axis.X, R - NR, BABYLON.Space.LOCAL);
                     R = NR;
                                             
                 };
@@ -848,8 +838,8 @@
                         theta = 0;
                         NR = 0;
                     }
-                    pivot.translate(BABYLON.Axis.Z, NR - R, BABYLON.Space.LOCAL);
-                    carBody.translate(BABYLON.Axis.Z, R - NR, BABYLON.Space.LOCAL);
+                    pivot.translate(BABYLON.Axis.X, NR - R, BABYLON.Space.LOCAL);
+                    carBody.translate(BABYLON.Axis.X, R - NR, BABYLON.Space.LOCAL);
                     R = NR;
                             
                 };
@@ -878,7 +868,7 @@
                 }
             });
 
-            attachCamera(camera,car)
+            attachCamera(camera,carBody);
         }
 
         function createSmoke(){
