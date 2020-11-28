@@ -55,6 +55,21 @@
         var help = false;
         var menuHelp;
         var advancedTexture;
+        var selectedCar = 1;
+
+        var theta = 0;
+        var deltaTheta = 0;
+        var D = 0; 
+        var R = 50; 
+        var NR; 
+        var A = 4; 
+        var L = 4; 
+        var r = 1.5; 
+        var psi, psiRI, psiRO, psFI, psiFO;  
+        var phi; 
+        
+        var F; 
+
         var createScene = function () {
 
             // Create the scene space
@@ -82,28 +97,6 @@
             }));
 
             scene.registerAfterRender(function (scene) {
-                
-                if(map['w']|| map['W']){
-                    if(map['Shift']){
-                        var cars = scene.getMeshesByID('carro');
-
-                        cars.forEach(function(element){
-                            element.scaling.x += 0.1; 
-                            element.scaling.y += 0.1; 
-                            element.scaling.z += 0.1; 
-                        })
-                    }
-                    
-                }
-                if(map['s']|| map['s']){ 
-                    var cars = scene.getMeshesByID('carro');
-
-                    cars.forEach(function(element){
-                        element.scaling.x -= 0.1; 
-                        element.scaling.y -= 0.1; 
-                        element.scaling.z -= 0.1; 
-                    })
-                }
 
                 if(map['h']|| map['H']){
                     if(!help){
@@ -121,9 +114,12 @@
                 if(map['j']|| map['J']){
                     if(help){
                         menuHelp.dispose();
-                        const x = menuEscolha(scene);
-                
-                        escolhaConfirmarCarro(x, scene);
+                        const menuT = menuEscolha(scene);
+                        const fumaca = scene.getMeshesByID("foutain");
+                        fumaca.forEach(function(mesh){
+                            mesh.dispose();
+                        })
+                        escolhaConfirmarCarro(menuT, scene);
                         help = false;
                     }
                 }
@@ -152,7 +148,7 @@
 
             
 
-            var background =  BABYLON.MeshBuilder.CreatePlane("plane", {height:125, width: 125, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
+            var background =  BABYLON.MeshBuilder.CreatePlane("bg", {height:125, width: 125, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
             background.position = new BABYLON.Vector3(-2,10,15);
             background.rotation.y = 4.75;
             var materialBg = new BABYLON.StandardMaterial("material", scene);
@@ -188,11 +184,10 @@
 
             meshCarro = new BABYLON.Mesh("carro", scene);
 
-            var hitbox = BABYLON.MeshBuilder.CreateBox(String(idCarro), { height: 2.8, width: 3.7, size: 6.6 }, scene);
-            hitbox.visibility = 0.1;
+            var hitbox = BABYLON.MeshBuilder.CreateBox(String(idCarro), { height: 3.1   , width: 3.9, size: 6.6 }, scene);
+            hitbox.visibility = 0;
             hitbox.position.y = 0.5;
 
-            var materialPreto = materialCor("preto");
             var materialCarroPrincipal = materialCarro(idCarro);
             var materialCarroParachoque = materialCarro("parachoque");
 
@@ -203,19 +198,65 @@
             var caixaCorpoInferiorCarro = BABYLON.MeshBuilder.CreateBox("caixaI", { height: 0.4, width: 3, size: 6.5 }, scene);
             var caixaCorpoMediaCarro = BABYLON.MeshBuilder.CreateBox("caixaM", { height: 0.6, width: 2.95, size: 6.4 }, scene);
             var caixaCorpoSuperiorCarro = BABYLON.MeshBuilder.CreateBox("caixaS", { height: 1.4, width: 2.9, size: 4.5 }, scene);
-            var esferaRodaDianteiraDireita = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
-            var esferaRodaDianteiraEsquerda = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
-            var esferaRodaTraseiraDireita = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
-            var esferaRodaTraseiraEsquerda = BABYLON.MeshBuilder.CreateSphere("mySphere", { diameterX: 0.8, diameterY: 1 }, scene);
+            
 
+            //RODA
+            var wheelMaterial = new BABYLON.StandardMaterial("wheel_mat", scene);
+            //var wheelTexture = new BABYLON.Texture("http://i.imgur.com/ZUWbT6L.png", scene);
+            var wheelTexture = new BABYLON.Texture("Wheel.png", scene);
+            wheelMaterial.diffuseTexture = wheelTexture;
+            
+            var faceColors=[];
+            faceColors[1] = new BABYLON.Color3(0,0,0);
+            
+            var faceUV =[];
+            faceUV[0] = new BABYLON.Vector4(0,0,1,1);
+            faceUV[2] = new BABYLON.Vector4(0,0,1,1);
+        
+            var wheelFI = BABYLON.MeshBuilder.CreateCylinder("wheelFI", {diameter: 1.2, height: 1, tessellation: 24, faceColors:faceColors, faceUV:faceUV}, scene);
+            wheelFI.material = wheelMaterial;
+             
+            wheelFI.rotate(BABYLON.Axis.Z, Math.PI/2, BABYLON.Space.WORLD);
+
+
+            var pivotFI = new BABYLON.Mesh("pivotFI", scene);
+            pivotFI.parent = caixaCorpoMediaCarro;
+            pivotFI.position = new BABYLON.Vector3(-6.5, 0, 0);
+            
+            var pivotFO = new BABYLON.Mesh("pivotFO", scene);
+            pivotFO.parent = caixaCorpoMediaCarro;
+            pivotFO.position = new BABYLON.Vector3(-6.5, 0, -2);
+
+            var wheelFO = wheelFI.createInstance("FO");
+
+            wheelFO.parent = pivotFO;
+            wheelFO.position = new BABYLON.Vector3(0, 0, 1.8);
+            
+            var wheelRI = wheelFI.createInstance("RI");
+            wheelRI.parent = caixaCorpoMediaCarro;
+            wheelRI.position = new BABYLON.Vector3(0, 0, -2.8);
+            
+            var wheelRO = wheelFI.createInstance("RO");
+            wheelRO.parent = caixaCorpoMediaCarro;
+            wheelRO.position = new BABYLON.Vector3(0, 0, 2.8);
+            
+            wheelFI.parent = pivotFI;
+            wheelFI.position = new BABYLON.Vector3(0, 0, -1.8);
+
+
+            pivot = new BABYLON.Mesh("pivot", scene); //current centre of rotation
+            pivot.position.x = 50;
+            caixaCorpoMediaCarro.parent = pivot;
+            pivot.addChild(wheelFI);
+            caixaCorpoMediaCarro.position = new BABYLON.Vector3(-50,0,0);
+
+            //var teste = BABYLON.MeshBuilder.CreateBox("caixaS", { height: 1.4, width: 2.9, size: 4.5 }, scene);
+            //teste.position = pivot.position;
+            
             //#region Aplicando material 
             caixaCorpoInferiorCarro.material = materialCarroParachoque;
             caixaCorpoMediaCarro.material = materialCarroPrincipal;
             caixaCorpoSuperiorCarro.material = materialCarroPrincipal;
-            esferaRodaDianteiraDireita.material = materialPreto;
-            esferaRodaDianteiraEsquerda.material = materialPreto;
-            esferaRodaTraseiraDireita.material = materialPreto;
-            esferaRodaTraseiraEsquerda.material = materialPreto;
             //#endregion
 
             //#region Altera posições das partes do carro
@@ -224,32 +265,39 @@
             //#endregion
 
             //#region Definindo posições das rodas
-            esferaRodaDianteiraDireita.position.y = deslY;
-            esferaRodaDianteiraDireita.position.x = deslX;
-            esferaRodaDianteiraDireita.position.z = deslZ;
+            //wheelFO.position.y = deslY;
+            //wheelFO.position.x = deslX;
+            //wheelFO.position.z = deslZ;
+            wheelFO.rotation.x = 0.5;
 
-            esferaRodaDianteiraEsquerda.position.y = deslY;
-            esferaRodaDianteiraEsquerda.position.x = deslX * -1;
-            esferaRodaDianteiraEsquerda.position.z = deslZ;
+            //wheelFI.position.y = deslY;
+            //wheelFI.position.x = deslX * -1;
+            //wheelFI.position.z = deslZ;
+            wheelFO.rotation.x = 0.5;
 
-            esferaRodaTraseiraDireita.position.y = deslY;
-            esferaRodaTraseiraDireita.position.x = deslX;
-            esferaRodaTraseiraDireita.position.z = deslZ * -1;
+            //wheelRI.position.y = deslY;
+            //wheelRI.position.x = deslX;
+            //wheelRI.position.z = deslZ * -1;
+            wheelFO.rotation.x = 0.5;
 
-            esferaRodaTraseiraEsquerda.position.y = deslY;
-            esferaRodaTraseiraEsquerda.position.x = deslX * -1;
-            esferaRodaTraseiraEsquerda.position.z = deslZ * -1;
+            //wheelRO.position.y = deslY;
+            //wheelRO.position.x = deslX * -1;
+            //wheelRO.position.z = deslZ * -1;
+            wheelFO.rotation.z = 0.5;
             //#endregion
 
             meshCarro.addChild(hitbox);
             meshCarro.addChild(caixaCorpoInferiorCarro);
             meshCarro.addChild(caixaCorpoMediaCarro );
             meshCarro.addChild(caixaCorpoSuperiorCarro);
-            meshCarro.addChild(esferaRodaDianteiraDireita);
-            meshCarro.addChild(esferaRodaDianteiraEsquerda);
-            meshCarro.addChild(esferaRodaTraseiraDireita);
-            meshCarro.addChild(esferaRodaTraseiraEsquerda);
-
+            /*meshCarro.addChild(wheelFI);
+            meshCarro.addChild(wheelFO);
+            meshCarro.addChild(wheelRI);
+            meshCarro.addChild(wheelRO);
+            meshCarro.addChild(pivotFI);
+            meshCarro.addChild(pivotFO);
+            meshCarro.addChild(pivot);*/
+            
             return meshCarro;
         }
 
@@ -399,8 +447,18 @@
             var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
             camera.setPosition(new BABYLON.Vector3(40, 10, 0));
             camera.lockedTarget = new BABYLON.Vector3(0,0,0);
+            camera.attachControl(canvas,true);
 
+            camera.inputs.remove(camera.inputs.attached.mousewheel);
+
+            var bg = scene.getMeshesByID("bg");
+            bg.forEach(function(mesh){
+                mesh.dispose();
+            })
             
+
+            createSmoke();
+            scene.clearColor = new BABYLON.Color3(0,0.5,1);
 
             tamanho = meshCarro.absoluteScaling.x;
             tamanho += 2;
@@ -499,7 +557,12 @@
                 });
 
                 botaoSim.onPointerClickObservable.add(function () {
-                    
+                    scene.meshes.forEach(function (mesh){
+                        mesh.dispose();
+                    })
+                   
+                    createGameScene(scene,selectedCar);
+                    advancedTexture.dispose();
                 });
 
                 if(zoom == 0){
@@ -598,6 +661,10 @@
             meshes.forEach(function(mesh){
                 mesh.dispose();
             })
+            var ground = scene.getMeshesByID("ground");
+            ground.forEach(function(mesh){
+                mesh.dispose();
+            })
         }
 
         function setupCarSelectScene(scene, objectFunction, carID){
@@ -632,29 +699,241 @@
                         const car = setupCarSelectScene(scene,criarCarro, 1);      
                         menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
+                        selectedCar = 1;
                     }
                     else if(pickResult.pickedMesh.id == 2){
                         const car = setupCarSelectScene(scene,criarCarro, 2);
                         menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
+                        selectedCar = 2;
                     }
                     else if(pickResult.pickedMesh.id == 3){
                         const car = setupCarSelectScene(scene,criarCarro, 3);
                         menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
+                        selectedCar = 3;
                     }
                     else if(pickResult.pickedMesh.id == 4){
                         const car = setupCarSelectScene(scene,criarCarro, 4);
                         menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
+                        selectedCar = 4;
                     }
                     else if(pickResult.pickedMesh.id == 5){
                         const car = setupCarSelectScene(scene,criarCarro, 5);
                         menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
+                        selectedCar = 5;
                     }
                 }
             }
+        }
+
+        function createGameScene(scene, idCarro) {
+            cleanMesh(scene);
+            scene.cameras.forEach(function(camera){
+                camera.dispose(false,true)
+            })
+            createSmoke();
+            scene.clearColor = new BABYLON.Color3(0,0.5,1);
+            var groundSize = 400;
+  
+            var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: groundSize, height: groundSize}, scene);
+            var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0.25);
+            ground.material = groundMaterial;
+            ground.position.y = -1;
+            var car =criarCarro(idCarro);
+            
+            /*car._children.forEach(function(carProp){
+                if(carProp.id == "pivotFO")
+            })*/
+
+            var pivotFO = car._children.find(function(carProp){
+                if(carProp.id == "pivotFO")
+                    return true;
+            })
+            var pivotFI = car._children.find(function(carProp){
+                if(carProp.id == "pivotFI")
+                    return true;
+            })
+            var wheelRI = car._children.find(function(carProp){
+                if(carProp.id == "wheelRI")
+                    return true;
+            })
+            var wheelRO = car._children.find(function(carProp){
+                if(carProp.id == "wheelRO")
+                    return true;
+            })
+            var wheelFI = car._children.find(function(carProp){
+                if(carProp.id == "wheelFI")
+                    return true;
+            })
+            var wheelFO = car._children.find(function(carProp){
+                if(carProp.id == "wheelFO")
+                    return true;
+            })
+
+            var carBody = car._children.find(function(carProp){
+                if(carProp.id == "caixaM")
+                    return true;
+            })
+
+
+            console.log(pivotFO);
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(0, 7, 20));
+            //camera.attachControl(canvas, true);
+
+            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+
+            var map = {};
+            scene.actionManager = new BABYLON.ActionManager(scene);
+
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+
+            }));
+
+            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+            }));
+
+            scene.registerAfterRender(function() {	
+                F = engine.getFps();
+                
+                if(map[" "] && D < 15 ) {
+                    D += 1;		
+                };
+                
+                if(D > 0.15) {
+                    D -= 0.15;
+                } 
+                else {
+                    D = 0;
+                }
+                            
+                distance = D/F;
+                psi = D/(r * F);
+                
+                if((map["a"] || map["A"]) && -Math.PI/6 < theta) {
+                    deltaTheta = -Math.PI/252;
+                    theta += deltaTheta;
+                    pivotFI.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
+                    pivotFO.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
+                    if(Math.abs(theta) > 0.00000001) {
+                        NR = A/2 +L/Math.tan(theta);	
+                    }
+                    else {
+                        theta = 0;
+                        NR = 0;
+                    }
+                    pivot.translate(BABYLON.Axis.Z, NR - R, BABYLON.Space.LOCAL);
+                    carBody.translate(BABYLON.Axis.Z, R - NR, BABYLON.Space.LOCAL);
+                    R = NR;
+                                            
+                };
+                    
+                if((map["d"] || map["D"])  && theta < Math.PI/6) {
+                    deltaTheta = Math.PI/252;
+                    theta += deltaTheta;
+                    pivotFI.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
+                    pivotFO.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
+                    if(Math.abs(theta) > 0.00000001) {
+                        NR = A/2 +L/Math.tan(theta);	
+                    }
+                    else {
+                        theta = 0;
+                        NR = 0;
+                    }
+                    pivot.translate(BABYLON.Axis.Z, NR - R, BABYLON.Space.LOCAL);
+                    carBody.translate(BABYLON.Axis.Z, R - NR, BABYLON.Space.LOCAL);
+                    R = NR;
+                            
+                };
+                
+                if(D > 0) {
+                    phi = D/(R * F);
+                    if(Math.abs(theta)>0) {	 
+                        pivot.rotate(BABYLON.Axis.Y, phi, BABYLON.Space.WORLD);
+                        psiRI = D/(r * F);
+                        psiRO = D * (R + A)/(r * F);
+                        psiFI = D * Math.sqrt(R* R + L * L)/(r * F);
+                        psiFO = D * Math.sqrt((R + A) * (R + A) + L * L)/(r * F);
+                    
+                        wheelFI.rotate(BABYLON.Axis.Y, psiFI, BABYLON.Space.LOCAL); 
+                        wheelFO.rotate(BABYLON.Axis.Y, psiFO, BABYLON.Space.LOCAL);
+                        wheelRI.rotate(BABYLON.Axis.Y, psiRI, BABYLON.Space.LOCAL);
+                        wheelRO.rotate(BABYLON.Axis.Y, psiRO, BABYLON.Space.LOCAL);
+                    }
+                    else {
+                        pivot.translate(BABYLON.Axis.X, -distance, BABYLON.Space.LOCAL);
+                        wheelFI.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL); 
+                        wheelFO.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
+                        wheelRI.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
+                        wheelRO.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
+                    }
+                }
+            });
+
+            attachCamera(camera,car)
+        }
+
+        function createSmoke(){
+            var particleSystem;
+            var useGPUVersion = false;
+
+            var fogTexture = new BABYLON.Texture("https://raw.githubusercontent.com/aWeirdo/Babylon.js/master/smoke_15.png", scene);
+
+            var fountain = BABYLON.Mesh.CreateBox("foutain", .01, scene);
+            fountain.visibility = 1;
+            var createNewSystem = function () {
+                if (particleSystem) {
+                    particleSystem.dispose();
+                }
+
+                if (useGPUVersion && BABYLON.GPUParticleSystem.IsSupported) {
+                    particleSystem = new BABYLON.GPUParticleSystem("particles", { capacity: 25000 }, scene);
+                    particleSystem.activeParticleCount = 15000;
+                    particleSystem.manualEmitCount = particleSystem.activeParticleCount;
+                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -100);  // Starting all from
+                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 100); // To..
+
+                } else {
+                    particleSystem = new BABYLON.ParticleSystem("particles", 10000, scene);
+                    particleSystem.manualEmitCount = particleSystem.getCapacity();
+                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -100); // Starting all from
+                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 100); // To...
+                }
+
+
+                particleSystem.particleTexture = fogTexture.clone();
+                particleSystem.emitter = fountain;
+
+                particleSystem.color1 = new BABYLON.Color4(0.8, 0.8, 0.8, 0.1);
+                particleSystem.color2 = new BABYLON.Color4(.95, .95, .95, 0.15);
+                particleSystem.colorDead = new BABYLON.Color4(0.9, 0.9, 0.9, 0.1);
+                particleSystem.minSize = 3.5;
+                particleSystem.maxSize = 5.0;
+                particleSystem.minLifeTime = Number.MAX_SAFE_INTEGER;
+                particleSystem.emitRate = 50000;
+                particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+                particleSystem.gravity = new BABYLON.Vector3(0, 0, 0);
+                particleSystem.direction1 = new BABYLON.Vector3(0, 0, 0);
+                particleSystem.direction2 = new BABYLON.Vector3(0, 0, 0);
+                particleSystem.minAngularSpeed = -2;
+                particleSystem.maxAngularSpeed = 2;
+                particleSystem.minEmitPower = .5;
+                particleSystem.maxEmitPower = 1;
+                particleSystem.updateSpeed = 0.005;
+
+                particleSystem.start();
+            }
+
+            createNewSystem();
+
         }
 
         function loop() {
