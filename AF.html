@@ -56,7 +56,7 @@
         var menuHelp;
         var advancedTexture;
         var selectedCar = 1;
-
+        var points=0;
        
 
         var createScene = function () {
@@ -96,6 +96,7 @@
                         //menuEscolha(scene);
                         menuHelp = criarHubHelp();
                         selecionado = false;
+                        points = 0;
                         help = true;
                     }
                 }
@@ -164,7 +165,11 @@
             carro4.position.z = 30;
             carro5.position.z = 40;
 
+            
+
             menuHelp = criarHubMenuEscolha();
+            //var risco = BABYLON.MeshBuilder.CreateBox("point", { height: 3, width: 3, size: 6 }, scene);
+            //risco.position.y = 4;
             return  menuHelp;
         }
 
@@ -280,13 +285,13 @@
             meshCarro.addChild(caixaCorpoInferiorCarro);
             meshCarro.addChild(caixaCorpoMediaCarro );
             meshCarro.addChild(caixaCorpoSuperiorCarro);
-            /*meshCarro.addChild(wheelFI);
+            meshCarro.addChild(wheelFI);
             meshCarro.addChild(wheelFO);
             meshCarro.addChild(wheelRI);
             meshCarro.addChild(wheelRO);
             meshCarro.addChild(pivotFI);
             meshCarro.addChild(pivotFO);
-            meshCarro.addChild(pivot);*/
+            meshCarro.addChild(pivot);
             
             return meshCarro;
         }
@@ -422,6 +427,9 @@
                 addHeader("(OS CARROS REPRESENTAM O NÍVEL DE DIFICULDADE, SENDO DO MAIS FÁCIL AO DIFÍCIL, DA ESQUERDA A DIREITA)", bottomPanel, alinhamentoCentro);
             }
 
+           
+
+
             buildUI();
             return advancedTexture;
         }
@@ -550,9 +558,9 @@
                     scene.meshes.forEach(function (mesh){
                         mesh.dispose();
                     })
-                   
-                    createGameScene(scene,selectedCar);
                     advancedTexture.dispose();
+                    createGameScene(scene,selectedCar);
+                    
                 });
 
                 if(zoom == 0){
@@ -577,6 +585,131 @@
                         meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
                         zoom++;
                     }
+                });
+            }
+
+            buildUI();
+            return advancedTexture;
+        }
+
+        function criarHubInGame() {
+            //var advancedTexture;
+
+            var buildUI = function () {
+                if (advancedTexture) {
+                    advancedTexture.dispose();
+                }
+                advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+                var bottomPanel = new BABYLON.GUI.StackPanel();
+                bottomPanel.height = "130px";
+                bottomPanel.paddingBottom = "20px";
+                bottomPanel.isVertical = true;
+                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                bottomPanel.fontSize = 20;
+                advancedTexture.addControl(bottomPanel);
+
+                var topPanel = new BABYLON.GUI.StackPanel();
+                topPanel.height = "600px";
+                topPanel.paddingBottom = "20px";
+                topPanel.isVertical = true;
+                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                topPanel.fontSize = 18;
+                advancedTexture.addControl(topPanel);
+
+                var addHeader = function (text, panel, alinhamento) {
+                    var header = new BABYLON.GUI.TextBlock();
+                    header.text = text;
+                    header.height = "30px";
+                    header.color = "white";
+                    header.outlineWidth = "4px";
+                    header.outlineColor = "black";
+                    header.textHorizontalAlignment = alinhamento;
+
+                    panel.addControl(header);
+                }
+
+                var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
+                addHeader("PONTOS: "+points, topPanel, alinhamentoCentro);      
+            }
+
+            buildUI();
+            return advancedTexture;
+        }
+
+        function criarHubEnd() {
+            //var advancedTexture;
+
+            var buildUI = function () {
+                if (advancedTexture) {
+                    advancedTexture.dispose();
+                }
+                advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+                var bottomPanel = new BABYLON.GUI.StackPanel();
+                bottomPanel.height = "130px";
+                bottomPanel.paddingBottom = "20px";
+                bottomPanel.isVertical = true;
+                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                bottomPanel.fontSize = 20;
+                advancedTexture.addControl(bottomPanel);
+
+                var topPanel = new BABYLON.GUI.StackPanel();
+                topPanel.height = "550px";
+                topPanel.paddingBottom = "20px";
+                topPanel.isVertical = true;
+                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                topPanel.fontSize = 18;
+                advancedTexture.addControl(topPanel);
+
+                var addHeader = function (text, panel, alinhamento) {
+                    var header = new BABYLON.GUI.TextBlock();
+                    header.text = text;
+                    header.height = "30px";
+                    header.color = "white";
+                    header.outlineWidth = "4px";
+                    header.outlineColor = "black";
+                    header.textHorizontalAlignment = alinhamento;
+
+                    panel.addControl(header);
+                }
+
+                var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+                addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
+                addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
+                addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("CORRIDA FINALIZADA COM SUCESSO", topPanel, alinhamentoCentro);
+                addHeader("PONTOS: "+points, topPanel, alinhamentoCentro); 
+                addHeader("PARABÉNS!!!", topPanel, alinhamentoCentro);
+
+                var botaoVoltar = BABYLON.GUI.Button.CreateSimpleButton("voltar", "Voltar ao menu principal");
+                botaoNao.width = 0.1
+                botaoNao.top = 280;
+                botaoNao.left = -80;
+                botaoNao.height = "40px"
+                botaoNao.color = "white"
+                botaoNao.background = "grey"
+                advancedTexture.addControl(botaoVoltar);
+                
+                botaoNao.onPointerClickObservable.add(function () {
+                    var menuText = menuEscolha(scene);
+                    advancedTexture.dispose();
+                    selecionado = false;
+                    zoom = 0;
+                    points = 0;
+                    escolhaConfirmarCarro(menuText, scene);
                 });
             }
 
@@ -681,8 +814,23 @@
             camera.setTarget(object);
         }
 
+        function escolhaClicarPonto(scene){
+            scene.onPointerDown = function(event, pickResult) {
+                if(pickResult.hit) {
+                    if(pickResult.pickedMesh.id == "point"){
+                        pickResult.pickedMesh.dispose();
+                        points += 10;
+                        if (advancedTexture) {
+                        advancedTexture.dispose();
+                        }
+                        criarHubInGame(); 
+                    }
+                }  
+            }
+        }
+
+
         function escolhaConfirmarCarro(menuText, scene){
-            console.log('entrou');
             scene.onPointerDown = function(event, pickResult) {
                 if(pickResult.hit && !selecionado) {
                     if(pickResult.pickedMesh.id == 1){
@@ -715,30 +863,23 @@
                         const menu = criarHubConfirmarCarro(scene);
                         selectedCar = 5;
                     }
+                    else if(pickResult.pickedMesh.id =="point"){
+                        pickResult.pickedMesh.dispose();
+                        points += 10;
+                    }
                 }
             }
         }
 
-        function createGameScene(scene, idCarro) {
 
-            var theta = 0;
-            var deltaTheta = 0;
-            var D = 0; 
-            var R = 50; 
-            var NR; 
-            var A = 4; 
-            var L = 4; 
-            var r = 1.5; 
-            var psi, psiRI, psiRO, psFI, psiFO;  
-            var phi; 
-            
-            var F; 
+        function createGameScene(scene, idCarro) {
 
             cleanMesh(scene);
             scene.cameras.forEach(function(camera){
                 camera.dispose(false,true)
             })
             createSmoke();
+            const txtHub = criarHubInGame();
             scene.clearColor = new BABYLON.Color3(0,0.5,1);
             var groundSize = 400;
   
@@ -746,129 +887,27 @@
             var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
             groundMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0.25);
             ground.material = groundMaterial;
-            ground.position.y = -1;
+            ground.position.y = -0.7;
             var car =criarCarro(idCarro);
-            
+
+            escolhaClicarPonto(scene);
+
             /*car._children.forEach(function(carProp){
                 if(carProp.id == "pivotFO")
             })*/
     
-            const carBody = scene.getMeshByID("caixaM");
-            //carBody = car;
 
-            const pivotFI = scene.getMeshByID("pivotFI");
-            const pivotFO = scene.getMeshByID("pivotFO");
-
-            const wheelRO = scene.getMeshByID("RO");
-            const wheelRI = scene.getMeshByID("RI");
-            const wheelFO = scene.getMeshByID("FO");
-            const wheelFI = scene.getMeshByID("wheelFI");
-
-            console.log(wheelFO);
-            console.log(wheelFI);
-            console.log(wheelRO);
-            console.log(wheelRI);
-
-            console.log(pivotFO);
-            console.log(pivotFI);
 
             var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
             camera.setPosition(new BABYLON.Vector3(0, 7, 20));
-            camera.attachControl(canvas, true);
+            //camera.attachControl(canvas, true);
 
             var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
             var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
            
-            var map = {};
-            scene.actionManager = new BABYLON.ActionManager(scene);
+            
 
-            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
-                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-
-            }));
-
-            scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
-                map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
-            }));
-
-            scene.registerAfterRender(function() {	
-                F = engine.getFps();
-                
-                if(map[" "] && D < 15 ) {
-                    D += 1;		
-                };
-                
-                if(D > 0.15) {
-                    D -= 0.15;
-                } 
-                else {
-                    D = 0;
-                }
-                            
-                distance = D/F;
-                psi = D/(r * F);
-                
-                if((map["a"] || map["A"]) && -Math.PI/6 < theta) {
-                    deltaTheta = -Math.PI/252;
-                    theta += deltaTheta;
-                    pivotFI.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
-                    pivotFO.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
-                    if(Math.abs(theta) > 0.00000001) {
-                        NR = A/2 +L/Math.tan(theta);	
-                    }
-                    else {
-                        theta = 0;
-                        NR = 0;
-                    }
-                    pivot.translate(BABYLON.Axis.X, NR - R, BABYLON.Space.LOCAL);
-                    carBody.translate(BABYLON.Axis.X, R - NR, BABYLON.Space.LOCAL);
-                    R = NR;
-                                            
-                };
-                    
-                if((map["d"] || map["D"])  && theta < Math.PI/6) {
-                    deltaTheta = Math.PI/252;
-                    theta += deltaTheta;
-                    pivotFI.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
-                    pivotFO.rotate(BABYLON.Axis.Y, deltaTheta, BABYLON.Space.LOCAL);
-                    if(Math.abs(theta) > 0.00000001) {
-                        NR = A/2 +L/Math.tan(theta);	
-                    }
-                    else {
-                        theta = 0;
-                        NR = 0;
-                    }
-                    pivot.translate(BABYLON.Axis.X, NR - R, BABYLON.Space.LOCAL);
-                    carBody.translate(BABYLON.Axis.X, R - NR, BABYLON.Space.LOCAL);
-                    R = NR;
-                            
-                };
-                
-                if(D > 0) {
-                    phi = D/(R * F);
-                    if(Math.abs(theta)>0) {	 
-                        pivot.rotate(BABYLON.Axis.Y, phi, BABYLON.Space.WORLD);
-                        psiRI = D/(r * F);
-                        psiRO = D * (R + A)/(r * F);
-                        psiFI = D * Math.sqrt(R* R + L * L)/(r * F);
-                        psiFO = D * Math.sqrt((R + A) * (R + A) + L * L)/(r * F);
-                    
-                        wheelFI.rotate(BABYLON.Axis.Y, psiFI, BABYLON.Space.LOCAL); 
-                        wheelFO.rotate(BABYLON.Axis.Y, psiFO, BABYLON.Space.LOCAL);
-                        wheelRI.rotate(BABYLON.Axis.Y, psiRI, BABYLON.Space.LOCAL);
-                        wheelRO.rotate(BABYLON.Axis.Y, psiRO, BABYLON.Space.LOCAL);
-                    }
-                    else {
-                        pivot.translate(BABYLON.Axis.X, -distance, BABYLON.Space.LOCAL);
-                        wheelFI.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL); 
-                        wheelFO.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
-                        wheelRI.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
-                        wheelRO.rotate(BABYLON.Axis.Y, psi, BABYLON.Space.LOCAL);
-                    }
-                }
-            });
-
-            attachCamera(camera,carBody);
+            attachCamera(camera,car);
         }
 
         function createSmoke(){
@@ -924,6 +963,10 @@
 
             createNewSystem();
 
+        }
+
+        function corridaFinalizada(hubGame){
+            hubGame.dispose();
         }
 
         function loop() {
