@@ -50,6 +50,11 @@
         var scene = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true }); };
         var selecionado = false;
+        var zoom = 0;
+        var meshCarro;
+        var help = false;
+        var menuHelp;
+        var advancedTexture;
         var createScene = function () {
 
             // Create the scene space
@@ -76,7 +81,8 @@
                 map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
             }));
 
-            scene.registerAfterRender(function () {
+            scene.registerAfterRender(function (scene) {
+                
                 if(map['w']|| map['W']){
                     if(map['Shift']){
                         var cars = scene.getMeshesByID('carro');
@@ -99,6 +105,30 @@
                     })
                 }
 
+                if(map['h']|| map['H']){
+                    if(!help){
+                        menuHelp.dispose();
+                        cleanMesh(scene);
+                        if(advancedTexture)
+                            advancedTexture.dispose();
+                        //menuEscolha(scene);
+                        menuHelp = criarHubHelp();
+                        selecionado = false;
+                        help = true;
+                    }
+                }
+
+                if(map['j']|| map['J']){
+                    if(help){
+                        menuHelp.dispose();
+                        const x = menuEscolha(scene);
+                
+                        escolhaConfirmarCarro(x, scene);
+                        help = false;
+                    }
+                }
+
+               
                 });
 
                 const menuText = menuEscolha(scene);
@@ -127,12 +157,11 @@
             background.rotation.y = 4.75;
             var materialBg = new BABYLON.StandardMaterial("material", scene);
             materialBg.diffuseTexture = new BABYLON.Texture("./Sky.jpg");
-            materialBg.diffuseTexture.uScale = 0.8;
-            //materialBg.diffuseTexture.vScale = 8;
+            materialBg.diffuseTexture.uScale = 0.4;
+            materialBg.diffuseTexture.vScale = 1.2;
             materialBg.specularTexture = new BABYLON.Texture("./Sky.jpg");
             materialBg.emissiveTexture = new BABYLON.Texture("./Sky.jpg");
             background.material = materialBg;
-            
             
         }
 
@@ -150,14 +179,14 @@
             carro4.position.z = 30;
             carro5.position.z = 40;
 
-            const menu = criarHubMenuEscolha();
-            return menu;
+            menuHelp = criarHubMenuEscolha();
+            return  menuHelp;
         }
 
 
         function criarCarro(idCarro) {
 
-            var meshCarro = new BABYLON.Mesh("carro", scene);
+            meshCarro = new BABYLON.Mesh("carro", scene);
 
             var hitbox = BABYLON.MeshBuilder.CreateBox(String(idCarro), { height: 2.8, width: 3.7, size: 6.6 }, scene);
             hitbox.visibility = 0.1;
@@ -348,6 +377,7 @@
                 addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
                 addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
                 addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
 
                 addHeader("SELECIONE O CARRO QUE DESEJA JOGAR", bottomPanel, alinhamentoCentro);
                 addHeader("PARA SELECIONAR USE O CLIQUE", bottomPanel, alinhamentoCentro);
@@ -359,7 +389,22 @@
         }
 
         function criarHubConfirmarCarro(scene) {
-            var advancedTexture;
+            let tamanhoOriginal;
+            let tamanho;
+            var meshBotoes = new BABYLON.Mesh("botoes", scene);
+            scene.cameras.forEach(function(camera){
+                camera.dispose(false,true)
+            })
+
+            var camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, BABYLON.Vector3.Zero(), scene);
+            camera.setPosition(new BABYLON.Vector3(40, 10, 0));
+            camera.lockedTarget = new BABYLON.Vector3(0,0,0);
+
+            
+
+            tamanho = meshCarro.absoluteScaling.x;
+            tamanho += 2;
+            meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
 
             var buildUI = function () {
                 if (advancedTexture) {
@@ -368,7 +413,7 @@
                 advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
                 var bottomPanel = new BABYLON.GUI.StackPanel();
-                bottomPanel.height = "200px";
+                bottomPanel.height = "100px";
                 bottomPanel.paddingBottom = "20px";
                 bottomPanel.isVertical = true;
                 bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
@@ -402,13 +447,14 @@
                 addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
                 addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
                 addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
 
                 addHeader("DESEJA ESCOLHER ESSE CARRO?", bottomPanel, alinhamentoCentro);
 
                 //var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("myUI");
                 var botaoSim = BABYLON.GUI.Button.CreateSimpleButton("sim", "Sim");
                 botaoSim.width = 0.1
-                botaoSim.top = 200;
+                botaoSim.top = 280;
                 botaoSim.left = 80;
                 botaoSim.height = "40px"
                 botaoSim.color = "white"
@@ -417,23 +463,130 @@
 
                 var botaoNao = BABYLON.GUI.Button.CreateSimpleButton("nao", "Não");
                 botaoNao.width = 0.1
-                botaoNao.top = 200;
+                botaoNao.top = 280;
                 botaoNao.left = -80;
                 botaoNao.height = "40px"
                 botaoNao.color = "white"
                 botaoNao.background = "grey"
                 advancedTexture.addControl(botaoNao);
 
+                var botaoAumentar = BABYLON.GUI.Button.CreateSimpleButton("aumentar", "Aumentar Zoom");
+                botaoAumentar.width = 0.1
+                botaoAumentar.top = -40;
+                botaoAumentar.left = -600;
+                botaoAumentar.height = "40px"
+                botaoAumentar.color = "white"
+                botaoAumentar.background = "blue"
+                advancedTexture.addControl(botaoAumentar);
+
+                var botaoDiminuir = BABYLON.GUI.Button.CreateSimpleButton("diminuir", "Diminuir Zoom");
+                botaoDiminuir.width = 0.1
+                botaoDiminuir.top = 20;
+                botaoDiminuir.left = -600;
+                botaoDiminuir.height = "40px"
+                botaoDiminuir.color = "white"
+                botaoDiminuir.background = "blue"
+                advancedTexture.addControl(botaoDiminuir);
+
+
                 botaoNao.onPointerClickObservable.add(function () {
+                    meshCarro.dispose();
                     var menuText = menuEscolha(scene);
                     advancedTexture.dispose();
                     selecionado = false;
+                    zoom = 0;
                     escolhaConfirmarCarro(menuText, scene);
                 });
 
                 botaoSim.onPointerClickObservable.add(function () {
                     
                 });
+
+                if(zoom == 0){
+                    tamanhoOriginal = meshCarro.absoluteScaling.x;
+                }
+
+                botaoDiminuir.onPointerClickObservable.add(function () {
+                    tamanho = meshCarro.absoluteScaling.x;
+                    console.log(tamanho);
+                    if (zoom>-3) {
+                        tamanho -= 0.5;
+                        meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
+                        zoom--;
+                    }
+                });
+
+                botaoAumentar.onPointerClickObservable.add(function () {
+                    tamanho = meshCarro.absoluteScaling.x;
+                    console.log(tamanho);
+                    if (zoom<3) {
+                        tamanho += 0.5;
+                        meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
+                        zoom++;
+                    }
+                });
+            }
+
+            buildUI();
+            return advancedTexture;
+        }
+
+        function criarHubHelp() {
+            var advancedTexture;
+
+            var buildUI = function () {
+                if (advancedTexture) {
+                    advancedTexture.dispose();
+                }
+                advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+                var bottomPanel = new BABYLON.GUI.StackPanel();
+                bottomPanel.height = "130px";
+                bottomPanel.paddingBottom = "20px";
+                bottomPanel.isVertical = true;
+                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                bottomPanel.fontSize = 20;
+                advancedTexture.addControl(bottomPanel);
+
+                var topPanel = new BABYLON.GUI.StackPanel();
+                topPanel.height = "550px";
+                topPanel.paddingBottom = "20px";
+                topPanel.isVertical = true;
+                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
+                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+                topPanel.fontSize = 18;
+                advancedTexture.addControl(topPanel);
+
+                var addHeader = function (text, panel, alinhamento) {
+                    var header = new BABYLON.GUI.TextBlock();
+                    header.text = text;
+                    header.height = "30px";
+                    header.color = "white";
+                    header.outlineWidth = "4px";
+                    header.outlineColor = "black";
+                    header.textHorizontalAlignment = alinhamento;
+
+                    panel.addControl(header);
+                }
+
+                var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+
+                addHeader("AVALIAÇÃO FINAL", topPanel, alinhamentoCentro);
+                addHeader("Gabriel Antonio Noel - 180274", topPanel, alinhamentoCentro);
+                addHeader("Gustavo dos Santos Nogueira - 181010", topPanel, alinhamentoCentro);
+                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("Para jogar é necessário apenas selecionar o seu carro e capturar o máximo de pontos que irão aparecer no cenários antes do tempo acabar.", topPanel, alinhamentoCentro);
+                addHeader("Os carros apresentam dificuldade diferentes pois possuem velocidades diferentes, os que estão mais a equerda são mais rápido do que os que se encontram na direita.", topPanel, alinhamentoCentro); 
+                addHeader("São utilizadas apenas setas para controlar o carro.", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("", topPanel, alinhamentoCentro);
+                addHeader("APERTE J PARA VOLTAR AO MENU DE ESCOLHA", topPanel, alinhamentoCentro);
             }
 
             buildUI();
@@ -472,31 +625,32 @@
         }
 
         function escolhaConfirmarCarro(menuText, scene){
+            console.log('entrou');
             scene.onPointerDown = function(event, pickResult) {
                 if(pickResult.hit && !selecionado) {
                     if(pickResult.pickedMesh.id == 1){
                         const car = setupCarSelectScene(scene,criarCarro, 1);      
-                        menuText.dispose();
+                        menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
                     }
                     else if(pickResult.pickedMesh.id == 2){
                         const car = setupCarSelectScene(scene,criarCarro, 2);
-                        menuText.dispose();
+                        menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
                     }
                     else if(pickResult.pickedMesh.id == 3){
                         const car = setupCarSelectScene(scene,criarCarro, 3);
-                        menuText.dispose();
+                        menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
                     }
                     else if(pickResult.pickedMesh.id == 4){
                         const car = setupCarSelectScene(scene,criarCarro, 4);
-                        menuText.dispose();
+                        menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
                     }
                     else if(pickResult.pickedMesh.id == 5){
                         const car = setupCarSelectScene(scene,criarCarro, 5);
-                        menuText.dispose();
+                        menuHelp.dispose();
                         const menu = criarHubConfirmarCarro(scene);
                     }
                 }
