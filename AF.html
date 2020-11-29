@@ -57,7 +57,8 @@
         var advancedTexture;
         var selectedCar = 1;
         var points=0;
-       
+        var idSelectedCar;
+        var inGame = false;
 
         var createScene = function () {
 
@@ -84,7 +85,6 @@
             scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
                 map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
             }));
-
             scene.registerAfterRender(function (scene) {
 
                 if(map['h']|| map['H']){
@@ -98,6 +98,15 @@
                         selecionado = false;
                         points = 0;
                         help = true;
+                        inGame=false;
+                        var pontos = scene.getMeshesByID("point");
+                        var smoke = scene.getMeshByID("foutain");
+                        if(pontos && smoke){
+                            smoke.dispose();
+                            pontos.forEach(function (mesh){
+                                mesh.dispose();
+                        })
+                        }
                     }
                 }
 
@@ -457,7 +466,6 @@
 
             createSmoke();
             scene.clearColor = new BABYLON.Color3(0,0.5,1);
-
             tamanho = meshCarro.absoluteScaling.x;
             tamanho += 2;
             meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
@@ -559,8 +567,8 @@
                         mesh.dispose();
                     })
                     advancedTexture.dispose();
+                    inGame = true;
                     createGameScene(scene,selectedCar);
-                    
                 });
 
                 if(zoom == 0){
@@ -601,23 +609,26 @@
                 }
                 advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-                var bottomPanel = new BABYLON.GUI.StackPanel();
-                bottomPanel.height = "130px";
-                bottomPanel.paddingBottom = "20px";
-                bottomPanel.isVertical = true;
-                bottomPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
-                bottomPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-                bottomPanel.fontSize = 20;
-                advancedTexture.addControl(bottomPanel);
 
-                var topPanel = new BABYLON.GUI.StackPanel();
-                topPanel.height = "600px";
-                topPanel.paddingBottom = "20px";
-                topPanel.isVertical = true;
-                topPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_STRETCH;
-                topPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-                topPanel.fontSize = 18;
-                advancedTexture.addControl(topPanel);
+                var topPanelE = new BABYLON.GUI.StackPanel();
+                topPanelE.width = "350px";
+                topPanelE.isVertical = true;
+                topPanelE.paddingLeft = "20px";
+                topPanelE.paddingTop = "10px";
+                topPanelE.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+                topPanelE.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+                topPanelE.fontSize = 16;
+                advancedTexture.addControl(topPanelE);
+
+                var topPanelD = new BABYLON.GUI.StackPanel();
+                topPanelD.width = "350px";
+                topPanelD.isVertical = true;
+                topPanelD.paddingLeft = "20px";
+                topPanelD.paddingTop = "20px";
+                topPanelD.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+                topPanelD.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+                topPanelD.fontSize = 20;
+                advancedTexture.addControl(topPanelD);
 
                 var addHeader = function (text, panel, alinhamento) {
                     var header = new BABYLON.GUI.TextBlock();
@@ -633,8 +644,9 @@
 
                 var alinhamentoCentro = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
 
-                addHeader("Aperte H para verificar as configurações", topPanel, alinhamentoCentro);
-                addHeader("PONTOS: "+points, topPanel, alinhamentoCentro);      
+                addHeader("Aperte H para verificar as configurações", topPanelE, alinhamentoCentro);
+                addHeader("(Caso aperter H, sairá da partida atual)", topPanelE, alinhamentoCentro);
+                addHeader("PONTOS: "+points, topPanelD, alinhamentoCentro);      
             }
 
             buildUI();
@@ -695,15 +707,15 @@
                 addHeader("PARABÉNS!!!", topPanel, alinhamentoCentro);
 
                 var botaoVoltar = BABYLON.GUI.Button.CreateSimpleButton("voltar", "Voltar ao menu principal");
-                botaoNao.width = 0.1
-                botaoNao.top = 280;
-                botaoNao.left = -80;
-                botaoNao.height = "40px"
-                botaoNao.color = "white"
-                botaoNao.background = "grey"
+                botaoVoltar.width = 0.2
+                botaoVoltar.top = 160;
+                botaoVoltar.left = 0;
+                botaoVoltar.height = "50px"
+                botaoVoltar.color = "white"
+                botaoVoltar.background = "grey"
                 advancedTexture.addControl(botaoVoltar);
                 
-                botaoNao.onPointerClickObservable.add(function () {
+                botaoVoltar.onPointerClickObservable.add(function () {
                     var menuText = menuEscolha(scene);
                     advancedTexture.dispose();
                     selecionado = false;
@@ -821,7 +833,7 @@
                         pickResult.pickedMesh.dispose();
                         points += 10;
                         if (advancedTexture) {
-                        advancedTexture.dispose();
+                            advancedTexture.dispose();
                         }
                         criarHubInGame(); 
                     }
@@ -873,24 +885,37 @@
 
 
         function createGameScene(scene, idCarro) {
-
+            idSelectedCar = idCarro;
             cleanMesh(scene);
             scene.cameras.forEach(function(camera){
                 camera.dispose(false,true)
             })
             createSmoke();
             const txtHub = criarHubInGame();
-            scene.clearColor = new BABYLON.Color3(0,0.5,1);
-            var groundSize = 400;
+            //scene.clearColor = new BABYLON.Color3(0,0.5,1);
+            var groundSize = 3000;
   
             var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: groundSize, height: groundSize}, scene);
             var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
-            groundMaterial.diffuseColor = new BABYLON.Color3(0, 1, 0.25);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
             ground.material = groundMaterial;
-            ground.position.y = -0.7;
+            ground.position.y = -0.8;
+
+            var groundTrack = BABYLON.MeshBuilder.CreateGround("ground", {width: 35, height: groundSize}, scene);
+            var groundTrackMaterial = new BABYLON.StandardMaterial("ground", scene);
+            groundTrackMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+            groundTrack.material = groundTrackMaterial;
+            groundTrack.position.y = -0.7;
+
+            scene.clearColor = new BABYLON.Color3(0,0,0);
+
+            
+
             var car =criarCarro(idCarro);
 
             escolhaClicarPonto(scene);
+            createBlocks(scene);
+            //carroAndar(car, idCarro, points);
 
             /*car._children.forEach(function(carProp){
                 if(carProp.id == "pivotFO")
@@ -924,17 +949,17 @@
                 }
 
                 if (useGPUVersion && BABYLON.GPUParticleSystem.IsSupported) {
-                    particleSystem = new BABYLON.GPUParticleSystem("particles", { capacity: 25000 }, scene);
+                    particleSystem = new BABYLON.GPUParticleSystem("particles", { capacity: 250000 }, scene);
                     particleSystem.activeParticleCount = 15000;
                     particleSystem.manualEmitCount = particleSystem.activeParticleCount;
-                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -100);  // Starting all from
-                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 100); // To..
+                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -1000);  // Starting all from
+                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 1000); // To..
 
                 } else {
                     particleSystem = new BABYLON.ParticleSystem("particles", 10000, scene);
                     particleSystem.manualEmitCount = particleSystem.getCapacity();
-                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -100); // Starting all from
-                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 100); // To...
+                    particleSystem.minEmitBox = new BABYLON.Vector3(-50, -30, -1000); // Starting all from
+                    particleSystem.maxEmitBox = new BABYLON.Vector3(100, 50, 1000); // To...
                 }
 
 
@@ -965,24 +990,56 @@
 
         }
 
-        function corridaFinalizada(hubGame){
-            hubGame.dispose();
+        function createBlocks(scene){
+            var materialRainbow = new BABYLON.StandardMaterial("rainbow", scene);
+            materialRainbow.diffuseTexture = new BABYLON.Texture('Rainbow.jpg');
+            materialRainbow.specularTexture = new BABYLON.Texture('Rainbow.jpg');
+            materialRainbow.emissiveTexture = new BABYLON.Texture('Rainbow.jpg');
+
+            for(let i =0 ; i< 300 ; i++){
+                var box = BABYLON.MeshBuilder.CreateBox("point", {}, scene);
+                box.position = new BABYLON.Vector3(-5 + Math.random()*10, 5, -1000 + Math.random()*1000);
+                box.material = materialRainbow;
+            }
         }
 
-        function loop() {
+        /*function carroAndar(carro, idSelectedCar, velocidade){
+            carro.position.z += velocidade*idSelectedCar + idSelectedCar*2;
+        }*/
 
-            var meshes = scene.getMeshesByID("mshe");
+        function corridaFinalizada(scene){
+            var pontos = scene.getMeshesByID("point");
+            var smoke = scene.getMeshByID("foutain");
+            var carro = scene.getMeshByID("carro");
+            var plane = scene.getMeshesByID("ground");
 
-            var inc = 1;
-            meshes.forEach(function (mesh) {
-                //meshes[0].rotation.x += (0.01 * inc);
-                // inc = inc * -1;
-                //meshes[1].rotation.y += (0.01 * inc);
+            carro.dispose();
+            smoke.dispose();
 
-                mesh.rotation.z += (0.01 * inc);
-                mesh.rotation.y += (0.01 * inc);
-                mesh.rotation.x += (0.01 * inc);
-            });
+            plane.forEach(function (mesh){
+                mesh.dispose();
+            })
+
+
+            pontos.forEach(function (mesh){
+                mesh.dispose();
+            })
+
+            inGame = false;
+            if (advancedTexture)
+                advancedTexture.dispose();
+            criarHubEnd();
+            console.log("Tudo certo");
+            inGame = false;
+        }
+
+        function loop(scene) {
+            if(inGame){
+                var carro = scene.getMeshByID("carro");
+                carro.position.z -= 0.2 + (points*idSelectedCar)/2000 - (idSelectedCar*0.4)/100;
+                if(carro.position.z < -1050)
+                    corridaFinalizada(scene);
+            }
         };
 
         engine = createDefaultEngine();
@@ -991,7 +1048,7 @@
 
         engine.runRenderLoop(function () {
             if (scene) {
-                loop();
+                loop(scene);
                 scene.render();
             }
         });
