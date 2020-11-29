@@ -101,12 +101,16 @@
                         inGame=false;
                         var pontos = scene.getMeshesByID("point");
                         var smoke = scene.getMeshByID("foutain");
+                        var bg = scene.getMeshByID("bg");
                         if(pontos && smoke){
                             smoke.dispose();
                             pontos.forEach(function (mesh){
                                 mesh.dispose();
-                        })
+                            })
                         }
+                        if(bg)
+                            bg.dispose();
+                        scene.clearColor = new BABYLON.Color3(0,0,0);
                     }
                 }
 
@@ -142,18 +146,15 @@
             camera.setPosition(new BABYLON.Vector3(40, 15, 0));
             camera.lockedTarget = new BABYLON.Vector3(0,5,20);
 
-            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
-
-            
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(5, 5, 20), scene);
 
             var background =  BABYLON.MeshBuilder.CreatePlane("bg", {height:125, width: 125, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, scene);
-            background.position = new BABYLON.Vector3(-2,10,15);
+            background.position = new BABYLON.Vector3(-10,10,15);
             background.rotation.y = 4.75;
             var materialBg = new BABYLON.StandardMaterial("material", scene);
             materialBg.diffuseTexture = new BABYLON.Texture("./Sky.jpg");
             materialBg.diffuseTexture.uScale = 0.4;
-            materialBg.diffuseTexture.vScale = 1.2;
+            materialBg.diffuseTexture.vScale = 1.5;
             materialBg.specularTexture = new BABYLON.Texture("./Sky.jpg");
             materialBg.emissiveTexture = new BABYLON.Texture("./Sky.jpg");
             background.material = materialBg;
@@ -778,9 +779,11 @@
                 addHeader("", topPanel, alinhamentoCentro);
                 addHeader("", topPanel, alinhamentoCentro);
                 addHeader("", topPanel, alinhamentoCentro);
-                addHeader("Para jogar é necessário apenas selecionar o seu carro e capturar o máximo de pontos que irão aparecer no cenários antes do tempo acabar.", topPanel, alinhamentoCentro);
-                addHeader("Os carros apresentam dificuldade diferentes pois possuem velocidades diferentes, os que estão mais a equerda são mais rápido do que os que se encontram na direita.", topPanel, alinhamentoCentro); 
-                addHeader("São utilizadas apenas setas para controlar o carro.", topPanel, alinhamentoCentro);
+                addHeader("Para jogar é necessário apenas selecionar o seu carro e capturar o máximo de pontos que irão aparecer no cenário antes de chegar ao fim da pista.", topPanel, alinhamentoCentro);
+                addHeader("Os carros apresentam dificuldade diferentes, pois possuem velocidades diferentes.", topPanel, alinhamentoCentro); 
+                addHeader("Os que estão mais a direita são mais rápidos se comparado aos que encontram na esquerda.", topPanel, alinhamentoCentro); 
+                addHeader("A quantidade de pontos que existentes aumentam conforme a dificuldade.", topPanel, alinhamentoCentro); 
+                addHeader("O jogador não pode controlar o carro, apenas capturar os pontos. Para capturar os pontos é necessário apenas clicar sobre eles.", topPanel, alinhamentoCentro);
                 addHeader("", topPanel, alinhamentoCentro);
                 addHeader("", topPanel, alinhamentoCentro);
                 addHeader("", topPanel, alinhamentoCentro);
@@ -815,8 +818,7 @@
             camera.setPosition(new BABYLON.Vector3(20, 5, 0));
             camera.attachControl(canvas, true);
 
-            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(10, 3,0), scene);
 
             attachCamera(camera,object)
             return object;
@@ -907,6 +909,15 @@
             groundTrack.material = groundTrackMaterial;
             groundTrack.position.y = -0.7;
 
+            var groundFinal = BABYLON.MeshBuilder.CreateGround("ground", {width: 35, height: 10}, scene);
+            var groundFinalMaterial = new BABYLON.StandardMaterial("ground", scene);
+            groundFinalMaterial.diffuseTexture = new BABYLON.Texture("Final.jpg");
+            groundFinalMaterial.specularTexture = new BABYLON.Texture("Final.jpg");
+            groundFinalMaterial.emissiveTexture = new BABYLON.Texture("Final.jpg");
+            groundFinal.material = groundFinalMaterial;
+            groundFinal.position.y = -0.6;
+            groundFinal.position.z = - 1040;
+
             scene.clearColor = new BABYLON.Color3(0,0,0);
 
             
@@ -927,8 +938,9 @@
             camera.setPosition(new BABYLON.Vector3(0, 7, 20));
             //camera.attachControl(canvas, true);
 
-            var light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 1, -1), scene);
+            var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(100, 250, 0), scene);
+            light2.diffuse= new BABYLON.Color3(0.9,0.9,0.9);
+            light2.specular= new BABYLON.Color3(1,1,1);
            
             
 
@@ -1034,11 +1046,20 @@
         }
 
         function loop(scene) {
+
             if(inGame){
                 var carro = scene.getMeshByID("carro");
-                carro.position.z -= 0.2 + (points*idSelectedCar)/2000 - (idSelectedCar*0.4)/100;
+
+                carro.position.z -= 0.4 + (points*idSelectedCar)/3000 - (idSelectedCar*0.4)/300;
+                console.log(0.4 + (points*idSelectedCar)/3000 - (idSelectedCar*0.4)/300);
+
                 if(carro.position.z < -1050)
                     corridaFinalizada(scene);
+            }else{
+                var carros = scene.getMeshesByID("carro")
+                carros.forEach(function (point){
+                    point.rotation.y += 0.01;
+                })
             }
         };
 
