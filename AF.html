@@ -578,7 +578,6 @@
 
                 botaoDiminuir.onPointerClickObservable.add(function () {
                     tamanho = meshCarro.absoluteScaling.x;
-                    console.log(tamanho);
                     if (zoom>-3) {
                         tamanho -= 0.5;
                         meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
@@ -588,7 +587,6 @@
 
                 botaoAumentar.onPointerClickObservable.add(function () {
                     tamanho = meshCarro.absoluteScaling.x;
-                    console.log(tamanho);
                     if (zoom<3) {
                         tamanho += 0.5;
                         meshCarro.scaling = new BABYLON.Vector3(tamanho, tamanho, tamanho);
@@ -1041,7 +1039,6 @@
             if (advancedTexture)
                 advancedTexture.dispose();
             criarHubEnd();
-            console.log("Tudo certo");
             inGame = false;
         }
 
@@ -1051,7 +1048,6 @@
                 var carro = scene.getMeshByID("carro");
 
                 carro.position.z -= 0.4 + (points*idSelectedCar)/3000 - (idSelectedCar*0.4)/300;
-                console.log(0.4 + (points*idSelectedCar)/3000 - (idSelectedCar*0.4)/300);
 
                 if(carro.position.z < -1050)
                     corridaFinalizada(scene);
